@@ -1,0 +1,25 @@
+FROM php:8.2.3-fpm
+
+RUN apt-get update \
+    && apt install -y nginx git curl zip unzip ssh libzip-dev autoconf pkg-config libssl-dev
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+RUN docker-php-ext-install sockets
+RUN docker-php-ext-install pdo_mysql zip exif pcntl
+
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY entrypoint /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
+
+RUN usermod -u 1000 www-data
+
+COPY --chown=www-data:www-data . /var/www/html
+
+USER www-data
+
+EXPOSE 80 443
+
+ENTRYPOINT ["entrypoint"]
